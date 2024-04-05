@@ -20,7 +20,7 @@
   - Credentials reset using a physical Button
  *************************************************************/
 
-/* Fill in information from your Blynk Template here */
+/* Fill in information from your Blynk Template here TEO*/
 /* Read more: https://bit.ly/BlynkInject */
 #define BLYNK_TEMPLATE_ID "TMPL4vLs-XKTJ"
 #define BLYNK_TEMPLATE_NAME "Temperatur"
