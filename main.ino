@@ -20,7 +20,7 @@
   - Credentials reset using a physical Button
  *************************************************************/
 
-/* Fill in information from your Blynk Template here TEO*/
+/* Fill in information from your Blynk Template here */
 /* Read more: https://bit.ly/BlynkInject */
 #define BLYNK_TEMPLATE_ID "TMPL4vLs-XKTJ"
 #define BLYNK_TEMPLATE_NAME "Temperatur"
@@ -129,7 +129,7 @@ unsigned long timeV4 = 8000;  // Time to wait in Idle state
 unsigned long timeV6 = 2000;  // Duration of Period A
 unsigned long timeV7 = 2000;  // Duration of Period B
 unsigned long timeV8 = 2000;  // Duration of Period C
-float tempCalibV5 = 0;
+float tempCalibV5 = 0.0;
 
 unsigned long startTime;  // Variable to store the start time
 bool condition_for_timeV4 = true;
@@ -137,6 +137,8 @@ bool coolingSystem = false;
 bool turnOff = false;
 bool timeCondition = false;
 unsigned long idleStateEnterTime = 0;
+bool delayTime = false;
+int mainButton = 0;
 
 
 
@@ -151,7 +153,7 @@ bool L6 = false;
 unsigned long manualCleaningStartTime = 0;
 bool manualCleaningStartCondition = false;
 unsigned long manualCleaningStopTime = 0;
-
+bool c3andc4condition = false;
 
 
 
@@ -163,6 +165,7 @@ float a14_TempCalibration = 0;
 unsigned long lastActivationTime = 0;
 unsigned long onTime = 0;
 unsigned long offTime = 0;
+bool schedule = false;
 // Setup a oneWire instance to communicate with any OneWire devices
 OneWire oneWire(oneWireBus);
 
@@ -221,7 +224,16 @@ void myTimerEvent()
   //  float watertemperature = sensors.getTempCByIndex(0);
   //  temp = dht.readTemperature();
   //hum = dht.readHumidity();
-  Blynk.virtualWrite(V0, waterTemp);
+  char tempStr[10]; // Assuming a maximum of 10 characters for the string
+
+  // Convert float to string with 2 decimal places
+  dtostrf(waterTemp, 5, 1, tempStr); // 6 is the width, including the decimal point and 2 decimal places
+
+  // Now tempStr contains the string representation of waterTemp with 2 decimal places
+
+  // Convert the string back to float
+  float waterTempFloat = atof(tempStr);
+  Blynk.virtualWrite(V0, waterTempFloat);
   Blynk.virtualWrite(V1, airTemp);
   //  Serial.println("Temp: " + String(data.temperature, 2) + "°C");
   //  Serial.println("Humidity: " + String(data.humidity, 1) + "%");
@@ -434,15 +446,18 @@ BLYNK_WRITE(V10) // Executes when the value of virtual pin 0 changes
     }
   }
 
-  for (int i = 1; i <= 7; i++) {
-    selectedDays[i - 1] = t.isWeekdaySelected(i);
+  for (int i = 1; i <= 6; i++) {
+    selectedDays[i] = t.isWeekdaySelected(i);
     Serial.print("day");
     Serial.print(i);
     Serial.print("   ");
-    Serial.println(selectedDays[i - 1]);
+    Serial.println(selectedDays[i]);
   }
+  selectedDays[0] = t.isWeekdaySelected(7);
 
   Serial.println();
+  cleaningSystem = false;
+  schedule = false;
   delay(3000);
 }
 
@@ -482,7 +497,9 @@ BLYNK_WRITE(V13) // Executes when the value of virtual pin 0 changes
   else {
     manualCleaning = false;
     autoCleaning = true;
-    digitalWrite(l4, LOW);
+    if (!c3andc4condition){
+    //digitalWrite(l4, LOW);
+    }
   }
 }
 
@@ -563,10 +580,8 @@ void loop() {
   mainSetpointV3 = setpointV1 + setpointV2;   ////mainSetpointV3 this is main setPoint of C1 Air Temperature
   sensors.requestTemperatures();
   float watertemperatureC = sensors.getTempCByIndex(0);
-  // float temperatureS1 = 15.00 + tempCalibV5;
-  Serial.println("calib");
-  Serial.println(tempCalibV5);
-  float temperatureS1 = watertemperatureC + tempCalibV5;
+  // float temperatureS1 = 15.02 + tempCalibV5;
+   float temperatureS1 = watertemperatureC + tempCalibV5;
   waterTemp = temperatureS1;
   Serial.print("Temperature S1: ");
   Serial.print(temperatureS1);
@@ -603,7 +618,7 @@ void loop() {
   // && coolingSystem == true
 
   ///C1 COde
-  if (!isnan(temperatureS1) && temperatureS1 > mainSetpointV3 ) {
+  if (!isnan(temperatureS1) && temperatureS1 > mainSetpointV3 && coolingSystem == true ) {
     timeCondition = true;
     if (systemState == 0) {
       // Transition to Demand state
@@ -626,11 +641,13 @@ void loop() {
       Serial.println("Idle State");
       idleStateEnterTime = millis(); // Record the time when entering the Idle state
       systemState = 0; // Update system state to Idle
+      delayTime = true;
     } else {
       // Check if 2 seconds have passed since entering the Idle state
       if (millis() - idleStateEnterTime >= timeV4) {
         Serial.println("2 seconds have passed in Idle State");
         startPeriodC();
+        delayTime = false;
         // Additional actions after 2 seconds in Idle State can be added here
       }
     }
@@ -662,7 +679,7 @@ void loop() {
       }
     }
   }
-  if (systemState == 1 && condition_for_timeV4 == false) {
+  if ((systemState == 1 && condition_for_timeV4 == false) || delayTime == true) {
     unsigned long elapsedTime = millis() - startTime;
     if (elapsedTime < (timeV6)) {
       // Period A
@@ -677,6 +694,9 @@ void loop() {
       // Reset to idle state after completing Period C
       systemState = 0;
       Serial.println("Resetting to New Time");
+      if (delayTime == true){
+        startTime = millis();
+      }
     }
   }
   //}
@@ -706,11 +726,15 @@ void loop() {
 
   // Compare with Blynk start time
   // Compare with Blynk start time
-  if (selectedDays[(timeinfo.tm_wday - 1)]) {
-    if (timeinfo.tm_hour >= startHour) {
+//  Serial.print("Start Hours");
+//  Serial.println(startHour);
+ Serial.print("days  ");
+ Serial.println(timeinfo.tm_wday);
+  if (selectedDays[timeinfo.tm_wday]) {
+    if ((timeinfo.tm_hour > startHour && schedule == false ) || (timeinfo.tm_hour == startHour &&
+        timeinfo.tm_min >= startHour && schedule == false)) {
       // Perform action for Blynk start time
       Serial.println("Blynk start time reached!");
-      digitalWrite(2, HIGH);
       cleaningSystem = true;
     }
 
@@ -719,21 +743,24 @@ void loop() {
     if (timeinfo.tm_hour == stopHour &&
         timeinfo.tm_min == stopMinute) {
       // Perform action for Blynk stop time
+      schedule = true;
       Serial.println("Blynk stop time reached!");
       digitalWrite(2, LOW);
       cleaningSystem = false;
     }
   }
+  Serial.print("schedule   ");
+  Serial.println(schedule);
   Serial.print("Auto Cleaning   ");
   Serial.println(cleaningSystem);
   //  Serial.print("TEst  ");
   //  Serial.println(timeinfo.tm_wday);
 
   //digitalWrite(2, HIGH);
-  if (autoCleaning == true && manualCleaning == false) {
+  if (autoCleaning == true && manualCleaning == false && c3andc4condition == false) {
     cleaning();
   }
-  if (manualCleaning) {
+  if (manualCleaning == true || c3andc4condition == true) {
     Serial.println("Manual Cleaning ");
     if (L5 == true) {
       digitalWrite(l5, HIGH);
@@ -761,19 +788,20 @@ void loop() {
 
     Serial.print("DETIEM");
     Serial.print(manualCleaningStopTime);
+    manualCleaningStartCondition = false;
     // If the output was activated, turn it off after the delay
     if (millis() - manualCleaningStopTime >= a13) {
       manualCleaningStartCondition = false;
-      // manualCleaning = false;
-      //digitalWrite(2, LOW);
+      c3andc4condition = false;
     }
   }
 
   // Check if the delay has passed and activate the output
   if (manualCleaningStartCondition == true && (millis() - manualCleaningStartTime >= a13)) {
-    manualCleaning = true;
-    //digitalWrite(2, HIGH);
+    digitalWrite(l4,HIGH);
+    c3andc4condition = true;
     manualCleaningStartCondition = false;  // Reset the flag
+
   }
 
   ///////////C3 CODE
@@ -813,6 +841,7 @@ void loop() {
     // Sensor is not triggered
     // digitalWrite(2, LOW);
     // if (outputActivated) {
+    outputActivated = false;
     Serial.print("C4 Pump Off");
     Serial.print(outputDeactivationTime);
     // If the output was activated, turn it off after the delay
@@ -888,6 +917,7 @@ void deactivateOutput() {
 void cleaning() {
   if (cleaningSystem == true) {
     digitalWrite(l4, HIGH);
+    digitalWrite(2, HIGH);
   }
   if (cleaningSystem == false) {
     digitalWrite(l4, LOW);
