@@ -732,7 +732,7 @@ void loop() {
  Serial.println(timeinfo.tm_wday);
   if (selectedDays[timeinfo.tm_wday]) {
     if ((timeinfo.tm_hour > startHour && schedule == false ) || (timeinfo.tm_hour == startHour &&
-        timeinfo.tm_min >= startHour && schedule == false)) {
+        timeinfo.tm_min >= startMinute && schedule == false)) {
       // Perform action for Blynk start time
       Serial.println("Blynk start time reached!");
       cleaningSystem = true;
