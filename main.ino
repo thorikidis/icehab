@@ -23,9 +23,9 @@
 /* Fill in information from your Blynk Template here */
 /* Read more: https://bit.ly/BlynkInject */
 #define BLYNK_TEMPLATE_ID "TMPL4vLs-XKTJ"
-#define BLYNK_TEMPLATE_NAME "Temperatur"
+#define BLYNK_TEMPLATE_NAME "IceHab"
 
-#define BLYNK_FIRMWARE_VERSION        "0.1.0"
+#define BLYNK_FIRMWARE_VERSION "0.1.0"
 
 #define BLYNK_PRINT Serial
 //#define BLYNK_DEBUG
@@ -55,8 +55,6 @@
 //  BlynkEdgent.run();
 //}
 
-
-
 // *************************************************************/
 //#define BLYNK_TEMPLATE_ID "TMPL4vLs-XKTJ"
 //#define BLYNK_TEMPLATE_NAME "Temperatur"
@@ -75,8 +73,6 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-
-
 const char *ntpServer = "pool.ntp.org";
 
 
@@ -92,22 +88,18 @@ int stopMinute;
 int stopSecond;
 bool selectedDays[7];
 
-
-
 float waterTemp;
 float airTemp;
 
-
-#define DHTPIN 4    // DHT22 sensor data pin
-#define DHTTYPE DHT22   // DHT22 sensor model
+#define DHTPIN 4       // DHT22 sensor data pin
+#define DHTTYPE DHT22  // DHT22 sensor model
 
 DHT dht(DHTPIN, DHTTYPE);
 
-
 ///Pins
-int l1 = 13;//12;  // Output connected to D12
-int l2 = 12;//13;  // Output connected to D13
-int l3 = 14;//14;  // Output connected to D14
+int l1 = 13;  //12;  // Output connected to D12
+int l2 = 12;  //13;  // Output connected to D13
+int l3 = 14;  //14;  // Output connected to D14
 int l4 = 25;
 int l5 = 26;
 int l6 = 27;
@@ -117,18 +109,17 @@ int l9 = 33;
 int waterSwitch = 32;
 const int oneWireBus = 5;
 
-
 //////////C1
-int setpointV1 = 20;  // Adjust this setpoint value as needed
+int setpointV1 = 2;  // Adjust this setpoint value as needed
 int setpointV2 = 2;
 int mainSetpointV3 = 0;
-int systemState = 0;      // 0: Idle, 1: Demand
+int systemState = 0;  // 0: Idle, 1: Demand
 
 // Time variables (in milliseconds)
 unsigned long timeV4 = 8000;  // Time to wait in Idle state
-unsigned long timeV6 = 2000;  // Duration of Period A
+unsigned long timeV6 = 5000;  // Duration of Period A
 unsigned long timeV7 = 2000;  // Duration of Period B
-unsigned long timeV8 = 2000;  // Duration of Period C
+unsigned long timeV8 = 5000;  // Duration of Period C
 float tempCalibV5 = 0.0;
 
 unsigned long startTime;  // Variable to store the start time
@@ -139,9 +130,6 @@ bool timeCondition = false;
 unsigned long idleStateEnterTime = 0;
 bool delayTime = false;
 int mainButton = 0;
-
-
-
 
 ////////c2
 bool cleaningSystem = false;
@@ -155,10 +143,8 @@ bool manualCleaningStartCondition = false;
 unsigned long manualCleaningStopTime = 0;
 bool c3andc4condition = false;
 
-
-
 ///////////C3
-int a9 = 5;
+int a9 = 3;
 int a11 = 2;
 unsigned long a13 = 10000;
 float a14_TempCalibration = 0;
@@ -181,27 +167,20 @@ unsigned long sensorHighTime = 0;
 bool outputActivated = false;
 unsigned long outputDeactivationTime = 0;
 
-
-
 //////////C5
 #define NUM_LEDS1 30
-#define LED_TYPE    WS2812
+#define LED_TYPE WS2812
 #define COLOR_ORDER GRB
 CRGB leds1[NUM_LEDS1];
 #define PIN1 18
 int data = 255;
 int r, g, b;
 
-
-
 ////////LCD variables
 unsigned long previousMillisLcd = 0;
-int displayStateLcd = 0; // 0: Wifi Connected, 1: TemperatureS1, 2: TemperatureS2
-const unsigned long displayIntervalLcd = 2000; // Display interval in milliseconds
-const unsigned long temperatureDisplayDuration = 2000; // Duration to display each temperature in milliseconds
-
-
-
+int displayStateLcd = 0;                                // 0: Wifi Connected, 1: TemperatureS1, 2: TemperatureS2
+const unsigned long displayIntervalLcd = 2000;          // Display interval in milliseconds
+const unsigned long temperatureDisplayDuration = 3000;  // Duration to display each temperature in milliseconds
 
 // Your WiFi credentials.
 // Set password to "" for open networks.
@@ -211,12 +190,10 @@ char pass[] = "pizzafries";
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 BlynkTimer timer;
 
-
 // This function sends Arduino's up time every second to Virtual Pin (5).
 // In the app, Widget's reading frequency should be set to PUSH. This means
 // that you define how often to send data to Blynk App.
-void myTimerEvent()
-{
+void myTimerEvent() {
   // You can send any value at any time.
   // Please don't send more that 10 values per second.
   // TempAndHumidity  data = dhtSensor.getTempAndHumidity();
@@ -224,10 +201,10 @@ void myTimerEvent()
   //  float watertemperature = sensors.getTempCByIndex(0);
   //  temp = dht.readTemperature();
   //hum = dht.readHumidity();
-  char tempStr[10]; // Assuming a maximum of 10 characters for the string
+  char tempStr[10];  // Assuming a maximum of 10 characters for the string
 
   // Convert float to string with 2 decimal places
-  dtostrf(waterTemp, 5, 1, tempStr); // 6 is the width, including the decimal point and 2 decimal places
+  dtostrf(waterTemp, 5, 1, tempStr);  // 6 is the width, including the decimal point and 2 decimal places
 
   // Now tempStr contains the string representation of waterTemp with 2 decimal places
 
@@ -238,10 +215,7 @@ void myTimerEvent()
   //  Serial.println("Temp: " + String(data.temperature, 2) + "°C");
   //  Serial.println("Humidity: " + String(data.humidity, 1) + "%");
   Serial.println("---");
-
 }
-
-
 
 void startPeriodA() {
   // Code for actions during Period A
@@ -287,7 +261,7 @@ void setup() {
   pinMode(l8, OUTPUT);
   pinMode(l9, OUTPUT);
   pinMode(waterSwitch, INPUT_PULLUP);
-  FastLED.addLeds<LED_TYPE, PIN1, COLOR_ORDER>(leds1, NUM_LEDS1).setCorrection( TypicalLEDStrip );
+  FastLED.addLeds<LED_TYPE, PIN1, COLOR_ORDER>(leds1, NUM_LEDS1).setCorrection(TypicalLEDStrip);
 
   dht.begin();
   sensors.begin();
@@ -299,134 +273,100 @@ void setup() {
   //  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
   timer.setInterval(1000L, myTimerEvent);
   //  configTime(5 * 3600, 0, "pool.ntp.org"); //For Pakistan
-  configTime(3 * 3600, 0, "pool.ntp.org"); //For Greece
+  configTime(3 * 3600, 0, "pool.ntp.org");  //For Greece
   //  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   delay(500);
 }
 
-BLYNK_WRITE(V3) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V3)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   setpointV1 = param.asInt();
-
-
 }
 
 
-BLYNK_WRITE(V2) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V2)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   setpointV2 = param.asInt();
-
-
 }
 
-BLYNK_WRITE(V4) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V4)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   timeV4 = param.asInt() * 1000;
-
-
 }
 
-BLYNK_WRITE(V5) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V5)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asFloat());
   tempCalibV5 = param.asFloat();
-
-
 }
 
-BLYNK_WRITE(V6) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V6)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   //delay(2000);
   timeV6 = param.asInt() * 1000;
-
-
 }
 
-BLYNK_WRITE(V7) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V7)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   timeV7 = param.asInt() * 1000;
-
-
 }
 
-BLYNK_WRITE(V8) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V8)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   timeV8 = param.asInt() * 1000;
-
-
 }
 
-BLYNK_WRITE(V9) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V9)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   if (param.asInt() == 1) {
     coolingSystem = true;
-  }
-  else {
+  } else {
     coolingSystem = false;
   }
 }
 
 
-BLYNK_WRITE(V10) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V10)  // Executes when the value of virtual pin 0 changes
 {
   TimeInputParam t(param);
 
   // Process start time
 
-  if (t.hasStartTime())
-  {
-    Serial.println(String("Start: ") +
-                   t.getStartHour() + ":" +
-                   t.getStartMinute() + ":" +
-                   t.getStartSecond());
+  if (t.hasStartTime()) {
+    Serial.println(String("Start: ") + t.getStartHour() + ":" + t.getStartMinute() + ":" + t.getStartSecond());
 
     startHour = t.getStartHour();
     startMinute = t.getStartMinute();
     startSecond = t.getStartSecond();
-  }
-  else if (t.isStartSunrise())
-  {
+  } else if (t.isStartSunrise()) {
     Serial.println("Start at sunrise");
-  }
-  else if (t.isStartSunset())
-  {
+  } else if (t.isStartSunset()) {
     Serial.println("Start at sunset");
-  }
-  else
-  {
+  } else {
     // Do nothing
   }
 
   // Process stop time
 
-  if (t.hasStopTime())
-  {
-    Serial.println(String("Stop: ") +
-                   t.getStopHour() + ":" +
-                   t.getStopMinute() + ":" +
-                   t.getStopSecond());
+  if (t.hasStopTime()) {
+    Serial.println(String("Stop: ") + t.getStopHour() + ":" + t.getStopMinute() + ":" + t.getStopSecond());
     stopHour = t.getStopHour();
     stopMinute = t.getStopMinute();
     stopSecond = t.getStopSecond();
   }
 
-  else if (t.isStopSunrise())
-  {
+  else if (t.isStopSunrise()) {
     Serial.println("Stop at sunrise");
-  }
-  else if (t.isStopSunset())
-  {
+  } else if (t.isStopSunset()) {
     Serial.println("Stop at sunset");
-  }
-  else
-  {
+  } else {
     // Do nothing: no stop time was set
   }
 
@@ -462,93 +402,81 @@ BLYNK_WRITE(V10) // Executes when the value of virtual pin 0 changes
 }
 
 
-BLYNK_WRITE(V11) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V11)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   if (param.asInt() == 1) {
     L5 = true;
-  }
-  else {
+  } else {
     L5 = false;
   }
 }
 
 
-BLYNK_WRITE(V12) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V12)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   if (param.asInt() == 1) {
     L6 = true;
-  }
-  else {
+  } else {
     L6 = false;
   }
 }
 
 
-BLYNK_WRITE(V13) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V13)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   if (param.asInt() == 1) {
     manualCleaning = true;
     autoCleaning = false;
     digitalWrite(l4, HIGH);
-  }
-  else {
+  } else {
     manualCleaning = false;
     autoCleaning = true;
-    if (!c3andc4condition){
-    //digitalWrite(l4, LOW);
+    if (!c3andc4condition) {
+      //digitalWrite(l4, LOW);
     }
   }
 }
 
 
-BLYNK_WRITE(V14) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V14)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
-  a9 = param.asInt() ;
-
-
+  a9 = param.asInt();
 }
 
-BLYNK_WRITE(V15) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V15)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
-  a11 = param.asInt() ;
-
-
+  a11 = param.asInt();
 }
 
-BLYNK_WRITE(V16) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V16)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   a13 = param.asInt() * 1000;
 }
 
 
-BLYNK_WRITE(V17) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V17)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   if (param.asInt() == 1) {
     c4 = true;
 
-  }
-  else {
+  } else {
     c4 = false;
     //digitalWrite(l9, LOW);
-
   }
 }
 
-BLYNK_WRITE(V19) // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V19)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asFloat());
-  a14_TempCalibration = param.asFloat() ;
+  a14_TempCalibration = param.asFloat();
 }
-
-
-
 
 
 
@@ -558,30 +486,27 @@ BLYNK_WRITE(V19) // Executes when the value of virtual pin 0 changes
 //static1(r, g, b,data);
 //}
 
-BLYNK_WRITE(V18)
-{
+BLYNK_WRITE(V18) {
   r = param[0].asInt();
   g = param[1].asInt();
   b = param[2].asInt();
   static1(r, g, b, data);
 }
 
-void static1(int r, int g, int b, int brightness)
-{
+void static1(int r, int g, int b, int brightness) {
   FastLED.setBrightness(brightness);
-  for (int i = 0; i < NUM_LEDS1; i++ )
-  {
+  for (int i = 0; i < NUM_LEDS1; i++) {
     leds1[i] = CRGB(r, g, b);
   }
   FastLED.show();
 }
 
 void loop() {
-  mainSetpointV3 = setpointV1 + setpointV2;   ////mainSetpointV3 this is main setPoint of C1 Air Temperature
+  mainSetpointV3 = setpointV1 + setpointV2;  ////mainSetpointV3 this is main setPoint of C1 Temperature
   sensors.requestTemperatures();
   float watertemperatureC = sensors.getTempCByIndex(0);
   // float temperatureS1 = 15.02 + tempCalibV5;
-   float temperatureS1 = watertemperatureC + tempCalibV5;
+  float temperatureS1 = watertemperatureC + tempCalibV5;
   waterTemp = temperatureS1;
   Serial.print("Temperature S1: ");
   Serial.print(temperatureS1);
@@ -594,7 +519,6 @@ void loop() {
   float a10 = a9 + temperatureS1;
   float a12 = a10 + a11;
   float mainSetpointforC3 = a12;  ////mainSetpointforC3 this is main setPoint of C3 Water Temperature
-
 
 
   Serial.print("Temperature S2: ");
@@ -618,7 +542,7 @@ void loop() {
   // && coolingSystem == true
 
   ///C1 COde
-  if (!isnan(temperatureS1) && temperatureS1 > mainSetpointV3 && coolingSystem == true ) {
+  if (!isnan(temperatureS1) && temperatureS1 > mainSetpointV3 && coolingSystem == true) {
     timeCondition = true;
     if (systemState == 0) {
       // Transition to Demand state
@@ -626,7 +550,6 @@ void loop() {
       systemState = 1;
       startTime = millis();  // Record the start time
       Serial.println("Demand State");
-
     }
   } else {
     // Transition to Idle state
@@ -639,8 +562,8 @@ void loop() {
     //    turnOff = true;
     if (systemState != 0) {
       Serial.println("Idle State");
-      idleStateEnterTime = millis(); // Record the time when entering the Idle state
-      systemState = 0; // Update system state to Idle
+      idleStateEnterTime = millis();  // Record the time when entering the Idle state
+      systemState = 0;                // Update system state to Idle
       delayTime = true;
     } else {
       // Check if 2 seconds have passed since entering the Idle state
@@ -651,7 +574,6 @@ void loop() {
         // Additional actions after 2 seconds in Idle State can be added here
       }
     }
-
   }
 
   // Control outputs based on system state and elapsed time
@@ -663,16 +585,14 @@ void loop() {
 
     if (elapsedTime < timeV4) {
       // Wait for timeV4
-      if (condition_for_timeV4 == true)
-      {
+      if (condition_for_timeV4 == true) {
         digitalWrite(l1, LOW);
         digitalWrite(l2, LOW);
         digitalWrite(l3, LOW);
         Serial.println("Waiting for timeV4");
       }
 
-    }
-    else {
+    } else {
       if (turnOff == false) {
         condition_for_timeV4 = false;
         startTime = millis();
@@ -694,7 +614,7 @@ void loop() {
       // Reset to idle state after completing Period C
       systemState = 0;
       Serial.println("Resetting to New Time");
-      if (delayTime == true){
+      if (delayTime == true) {
         startTime = millis();
       }
     }
@@ -714,7 +634,7 @@ void loop() {
   ///Blynk Start
   BlynkEdgent.run();
   //  Blynk.run();
-  timer.run(); // Initiates BlynkTimer.
+  timer.run();  // Initiates BlynkTimer.
   printLocalTime();
 
 
@@ -726,13 +646,12 @@ void loop() {
 
   // Compare with Blynk start time
   // Compare with Blynk start time
-//  Serial.print("Start Hours");
-//  Serial.println(startHour);
- Serial.print("days  ");
- Serial.println(timeinfo.tm_wday);
+  //  Serial.print("Start Hours");
+  //  Serial.println(startHour);
+  Serial.print("days  ");
+  Serial.println(timeinfo.tm_wday);
   if (selectedDays[timeinfo.tm_wday]) {
-    if ((timeinfo.tm_hour > startHour && schedule == false ) || (timeinfo.tm_hour == startHour &&
-        timeinfo.tm_min >= startMinute && schedule == false)) {
+    if ((timeinfo.tm_hour > startHour && schedule == false) || (timeinfo.tm_hour == startHour && timeinfo.tm_min >= startMinute && schedule == false)) {
       // Perform action for Blynk start time
       Serial.println("Blynk start time reached!");
       cleaningSystem = true;
@@ -740,8 +659,7 @@ void loop() {
 
     // Compare with Blynk stop time
 
-    if (timeinfo.tm_hour == stopHour &&
-        timeinfo.tm_min == stopMinute) {
+    if (timeinfo.tm_hour == stopHour && timeinfo.tm_min == stopMinute) {
       // Perform action for Blynk stop time
       schedule = true;
       Serial.println("Blynk stop time reached!");
@@ -764,15 +682,13 @@ void loop() {
     Serial.println("Manual Cleaning ");
     if (L5 == true) {
       digitalWrite(l5, HIGH);
-    }
-    else {
+    } else {
       digitalWrite(l5, LOW);
     }
 
     if (L6 == true) {
       digitalWrite(l6, HIGH);
-    }
-    else {
+    } else {
       digitalWrite(l6, LOW);
     }
   }
@@ -783,7 +699,7 @@ void loop() {
       manualCleaningStartTime = millis();
       manualCleaningStartCondition = true;
     }
-    manualCleaningStopTime = millis(); // Reset the deactivation timer
+    manualCleaningStopTime = millis();  // Reset the deactivation timer
   } else {
 
     Serial.print("DETIEM");
@@ -798,10 +714,9 @@ void loop() {
 
   // Check if the delay has passed and activate the output
   if (manualCleaningStartCondition == true && (millis() - manualCleaningStartTime >= a13)) {
-    digitalWrite(l4,HIGH);
+    digitalWrite(l4, HIGH);
     c3andc4condition = true;
     manualCleaningStartCondition = false;  // Reset the flag
-
   }
 
   ///////////C3 CODE
@@ -813,14 +728,13 @@ void loop() {
       turnOnOutputs();
     }
   } else {
-    lastActivationTime = 0; // Reset the time if condition is not met
+    lastActivationTime = 0;  // Reset the time if condition is not met
     if (millis() - offTime >= a13) {
       // If 2 seconds have passed since condition was last met, print something
       turnOffOutputs();
     }
     onTime = millis();
   }
-
 
 
   //////////C4 CODE
@@ -836,13 +750,13 @@ void loop() {
       sensorHighTime = millis();
       outputActivated = true;
     }
-    outputDeactivationTime = millis(); // Reset the deactivation timer
+    outputDeactivationTime = millis();  // Reset the deactivation timer
   } else {
     // Sensor is not triggered
     // digitalWrite(2, LOW);
     // if (outputActivated) {
     outputActivated = false;
-    Serial.print("C4 Pump Off");
+    Serial.print("C4 WaterLevel Off");
     Serial.print(outputDeactivationTime);
     // If the output was activated, turn it off after the delay
     if (millis() - outputDeactivationTime >= 10000) {
@@ -876,7 +790,7 @@ void loop() {
         lcd.setCursor(0, 0);
         lcd.print("Wifi Connected");
         lcd.setCursor(0, 1);
-        lcd.print("Press For 10Sec");
+        lcd.print("Reset For 10Sec");
         displayStateLcd = 1;
       } else if (displayStateLcd == 1) {
         lcd.clear();
@@ -924,14 +838,12 @@ void cleaning() {
   }
   if (L5 == true && cleaningSystem == true) {
     digitalWrite(l5, HIGH);
-  }
-  else {
+  } else {
     digitalWrite(l5, LOW);
   }
   if (L6 == true && cleaningSystem == true) {
     digitalWrite(l6, HIGH);
-  }
-  else {
+  } else {
     digitalWrite(l6, LOW);
   }
 }
@@ -977,5 +889,4 @@ void printLocalTime() {
   char timeWeekDay[10];
   strftime(timeWeekDay, 10, "%A", &timeinfo);
   Serial.println(timeWeekDay);
-
 }
