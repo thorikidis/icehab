@@ -72,8 +72,11 @@
 #include <DallasTemperature.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <Preferences.h>
 
-const char *ntpServer = "pool.ntp.org";
+
+Preferences preferences;
+const char* ntpServer = "pool.ntp.org";
 
 
 const long gmtOffset_sec = 0;
@@ -130,6 +133,7 @@ bool timeCondition = false;
 unsigned long idleStateEnterTime = 0;
 bool delayTime = false;
 int mainButton = 0;
+bool mainTurnOff = false;
 
 ////////c2
 bool cleaningSystem = false;
@@ -142,6 +146,7 @@ unsigned long manualCleaningStartTime = 0;
 bool manualCleaningStartCondition = false;
 unsigned long manualCleaningStopTime = 0;
 bool c3andc4condition = false;
+bool turnOffC2 = false;
 
 ///////////C3
 int a9 = 3;
@@ -212,6 +217,21 @@ void myTimerEvent() {
   float waterTempFloat = atof(tempStr);
   Blynk.virtualWrite(V0, waterTempFloat);
   Blynk.virtualWrite(V1, airTemp);
+  Blynk.virtualWrite(V3, setpointV1);
+  Blynk.virtualWrite(V9, coolingSystem);
+  Blynk.virtualWrite(V11, L5);
+  Blynk.virtualWrite(V12, L6);
+  Blynk.virtualWrite(V17, c4);
+  if (turnOffC2 == true) {
+    Blynk.virtualWrite(V13, 2);
+  }
+  else if (manualCleaning == true && autoCleaning == false)
+  {
+    Blynk.virtualWrite(V13, 1);
+  }
+  else if (manualCleaning == false && autoCleaning == true) {
+    Blynk.virtualWrite(V13, 0);
+  }
   //  Serial.println("Temp: " + String(data.temperature, 2) + "°C");
   //  Serial.println("Humidity: " + String(data.humidity, 1) + "%");
   Serial.println("---");
@@ -262,7 +282,7 @@ void setup() {
   pinMode(l9, OUTPUT);
   pinMode(waterSwitch, INPUT_PULLUP);
   FastLED.addLeds<LED_TYPE, PIN1, COLOR_ORDER>(leds1, NUM_LEDS1).setCorrection(TypicalLEDStrip);
-
+  preferences.begin("my-app", false);
   dht.begin();
   sensors.begin();
   pinMode(2, OUTPUT);
@@ -282,6 +302,7 @@ BLYNK_WRITE(V3)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   setpointV1 = param.asInt();
+  preferences.putInt("setpointV1", setpointV1);
 }
 
 
@@ -310,7 +331,7 @@ BLYNK_WRITE(V6)  // Executes when the value of virtual pin 0 changes
   timeV6 = param.asInt() * 1000;
 }
 
-BLYNK_WRITE(V7)  // Executes when the value of virtual pin 0 changes
+BLYNK_WRITE(V7)  // Executes when the value of virtual pin 0 changesv9
 {
   Serial.println(param.asInt());
   timeV7 = param.asInt() * 1000;
@@ -324,11 +345,14 @@ BLYNK_WRITE(V8)  // Executes when the value of virtual pin 0 changes
 
 BLYNK_WRITE(V9)  // Executes when the value of virtual pin 0 changes
 {
+
   Serial.println(param.asInt());
   if (param.asInt() == 1) {
     coolingSystem = true;
+    preferences.putBool("coolingSystem", coolingSystem);
   } else {
     coolingSystem = false;
+    preferences.putBool("coolingSystem", coolingSystem);
   }
 }
 
@@ -372,10 +396,11 @@ BLYNK_WRITE(V10)  // Executes when the value of virtual pin 0 changes
 
   // Process timezone
   // Timezone is already added to start/stop time
-
+  Serial.print("Time Zone");
   Serial.println(String("Time zone: ") + t.getTZ());
 
   // Get timezone offset (in seconds)
+  Serial.print("Time Zone Offset");
   Serial.println(String("Time zone offset: ") + t.getTZ_Offset());
 
   // Process weekdays (1. Mon, 2. Tue, 3. Wed, ...)
@@ -398,6 +423,7 @@ BLYNK_WRITE(V10)  // Executes when the value of virtual pin 0 changes
   Serial.println();
   cleaningSystem = false;
   schedule = false;
+  configTime(t.getTZ_Offset(), 0, "pool.ntp.org"); 
   delay(3000);
 }
 
@@ -407,8 +433,10 @@ BLYNK_WRITE(V11)  // Executes when the value of virtual pin 0 changes
   Serial.println(param.asInt());
   if (param.asInt() == 1) {
     L5 = true;
+    preferences.putBool("L5", L5);
   } else {
     L5 = false;
+    preferences.putBool("L5", L5);
   }
 }
 
@@ -418,8 +446,10 @@ BLYNK_WRITE(V12)  // Executes when the value of virtual pin 0 changes
   Serial.println(param.asInt());
   if (param.asInt() == 1) {
     L6 = true;
+    preferences.putBool("L6", L6);
   } else {
     L6 = false;
+    preferences.putBool("L6", L6);
   }
 }
 
@@ -427,16 +457,28 @@ BLYNK_WRITE(V12)  // Executes when the value of virtual pin 0 changes
 BLYNK_WRITE(V13)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
+  delay(3000);
   if (param.asInt() == 1) {
     manualCleaning = true;
     autoCleaning = false;
+    turnOffC2 = true;
+    preferences.putBool("manualCleaning", manualCleaning);
+    preferences.putBool("autoCleaning", autoCleaning);
+    preferences.putBool("turnOffC2", turnOffC2);
     digitalWrite(l4, HIGH);
-  } else {
+  } else if (param.asInt() == 0) {
     manualCleaning = false;
     autoCleaning = true;
+    turnOffC2 = true;
+    preferences.putBool("manualCleaning", manualCleaning);
+    preferences.putBool("autoCleaning", autoCleaning);
+    preferences.putBool("turnOffC2", turnOffC2);
     if (!c3andc4condition) {
       //digitalWrite(l4, LOW);
     }
+  } else if ((param.asInt() == 2)) {
+    turnOffC2 = false;
+    preferences.putBool("turnOffC2", turnOffC2);
   }
 }
 
@@ -465,9 +507,11 @@ BLYNK_WRITE(V17)  // Executes when the value of virtual pin 0 changes
   Serial.println(param.asInt());
   if (param.asInt() == 1) {
     c4 = true;
+    preferences.putBool("c4", c4);
 
   } else {
     c4 = false;
+    preferences.putBool("c4", c4);
     //digitalWrite(l9, LOW);
   }
 }
@@ -501,7 +545,19 @@ void static1(int r, int g, int b, int brightness) {
   FastLED.show();
 }
 
+void preferencesh() {
+  setpointV1 = preferences.getInt("setpointV1", 0);
+  coolingSystem = preferences.getBool("coolingSystem", coolingSystem);
+  manualCleaning = preferences.getBool("manualCleaning", manualCleaning);
+  manualCleaning = preferences.getBool("autoCleaning", autoCleaning);
+  manualCleaning = preferences.getBool("turnOffC2", turnOffC2);
+  L5 = preferences.getBool("L5", L5);
+  L6 = preferences.getBool("L6", L6);
+  c4 = preferences.getBool("c4", c4);
+}
+
 void loop() {
+  preferencesh();
   mainSetpointV3 = setpointV1 + setpointV2;  ////mainSetpointV3 this is main setPoint of C1 Temperature
   sensors.requestTemperatures();
   float watertemperatureC = sensors.getTempCByIndex(0);
@@ -544,6 +600,7 @@ void loop() {
   ///C1 COde
   if (!isnan(temperatureS1) && temperatureS1 > mainSetpointV3 && coolingSystem == true) {
     timeCondition = true;
+    mainTurnOff = true;
     if (systemState == 0) {
       // Transition to Demand state
       turnOff = false;
@@ -560,11 +617,12 @@ void loop() {
     //    systemState = 0;
     condition_for_timeV4 = true;
     //    turnOff = true;
-    if (systemState != 0) {
+    if (systemState != 0 || mainTurnOff == true) {
       Serial.println("Idle State");
       idleStateEnterTime = millis();  // Record the time when entering the Idle state
       systemState = 0;                // Update system state to Idle
       delayTime = true;
+      mainTurnOff = false;
     } else {
       // Check if 2 seconds have passed since entering the Idle state
       if (millis() - idleStateEnterTime >= timeV4) {
@@ -675,10 +733,10 @@ void loop() {
   //  Serial.println(timeinfo.tm_wday);
 
   //digitalWrite(2, HIGH);
-  if (autoCleaning == true && manualCleaning == false && c3andc4condition == false) {
+  if (autoCleaning == true && manualCleaning == false && c3andc4condition == false && turnOffC2 == true) {
     cleaning();
   }
-  if (manualCleaning == true || c3andc4condition == true) {
+  if ((manualCleaning == true || c3andc4condition == true) && turnOffC2 == true) {
     Serial.println("Manual Cleaning ");
     if (L5 == true) {
       digitalWrite(l5, HIGH);
@@ -691,6 +749,12 @@ void loop() {
     } else {
       digitalWrite(l6, LOW);
     }
+  }
+  if (turnOffC2 == false) {
+    Serial.println("C2 is Off");
+    digitalWrite(l4, LOW);
+    digitalWrite(l5, LOW);
+    digitalWrite(l6, LOW);
   }
 
   if (temperatureS2 < 1) {
