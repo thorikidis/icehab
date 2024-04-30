@@ -222,7 +222,7 @@ void myTimerEvent() {
   Blynk.virtualWrite(V11, L5);
   Blynk.virtualWrite(V12, L6);
   Blynk.virtualWrite(V17, c4);
-  if (turnOffC2 == true) {
+  if (turnOffC2 == false) {
     Blynk.virtualWrite(V13, 2);
   }
   else if (manualCleaning == true && autoCleaning == false)
@@ -424,7 +424,7 @@ BLYNK_WRITE(V10)  // Executes when the value of virtual pin 0 changes
   cleaningSystem = false;
   schedule = false;
   configTime(t.getTZ_Offset(), 0, "pool.ntp.org"); 
-  delay(3000);
+  //delay(3000);
 }
 
 
@@ -457,7 +457,7 @@ BLYNK_WRITE(V12)  // Executes when the value of virtual pin 0 changes
 BLYNK_WRITE(V13)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
-  delay(3000);
+  //delay(3000);
   if (param.asInt() == 1) {
     manualCleaning = true;
     autoCleaning = false;
@@ -557,19 +557,19 @@ void preferencesh() {
 }
 
 void loop() {
-  preferencesh();
+ 
   mainSetpointV3 = setpointV1 + setpointV2;  ////mainSetpointV3 this is main setPoint of C1 Temperature
   sensors.requestTemperatures();
   float watertemperatureC = sensors.getTempCByIndex(0);
-  // float temperatureS1 = 15.02 + tempCalibV5;
+  //float temperatureS1 = 15.02 + tempCalibV5;
   float temperatureS1 = watertemperatureC + tempCalibV5;
   waterTemp = temperatureS1;
   Serial.print("Temperature S1: ");
   Serial.print(temperatureS1);
   Serial.println("ºC");
-  //  float temperatureS2 = 36 + a14_TempCalibration;
+  // float temperatureS2 = 36 + a14_TempCalibration;
 
-  float temperatureS2 = dht.readTemperature() + a14_TempCalibration;
+   float temperatureS2 = dht.readTemperature() + a14_TempCalibration;
   airTemp = temperatureS2;
   ///C3 Calculation
   float a10 = a9 + temperatureS1;
@@ -657,7 +657,7 @@ void loop() {
       }
     }
   }
-  if ((systemState == 1 && condition_for_timeV4 == false) || delayTime == true) {
+  if ((systemState == 1 && condition_for_timeV4 == false) || delayTime == true ) {
     unsigned long elapsedTime = millis() - startTime;
     if (elapsedTime < (timeV6)) {
       // Period A
@@ -874,7 +874,9 @@ void loop() {
       }
     }
   }
-  Serial.println();
+  Serial.println(); 
+  preferencesh();
+
 }
 
 
