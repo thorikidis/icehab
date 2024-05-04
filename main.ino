@@ -113,7 +113,7 @@ int waterSwitch = 32;
 const int oneWireBus = 5;
 
 //////////C1
-int setpointV1 = 2;  // Adjust this setpoint value as needed
+int setpointV1 = 25;  // Adjust this setpoint value as needed
 int setpointV2 = 2;
 int mainSetpointV3 = 0;
 int systemState = 0;  // 0: Idle, 1: Demand
@@ -121,7 +121,7 @@ int systemState = 0;  // 0: Idle, 1: Demand
 // Time variables (in milliseconds)
 unsigned long timeV4 = 8000;  // Time to wait in Idle state
 unsigned long timeV6 = 5000;  // Duration of Period A
-unsigned long timeV7 = 2000;  // Duration of Period B
+unsigned long timeV7 = 5000;  // Duration of Period B
 unsigned long timeV8 = 5000;  // Duration of Period C
 float tempCalibV5 = 0.0;
 
@@ -151,7 +151,7 @@ bool turnOffC2 = false;
 ///////////C3
 int a9 = 3;
 int a11 = 2;
-unsigned long a13 = 10000;
+unsigned long a13 = 5000;
 float a14_TempCalibration = 0;
 unsigned long lastActivationTime = 0;
 unsigned long onTime = 0;
@@ -181,6 +181,11 @@ CRGB leds1[NUM_LEDS1];
 int data = 255;
 int r, g, b;
 
+
+
+///Prefernce
+bool preferencesCondition = true;
+bool sendingOldData = true;
 ////////LCD variables
 unsigned long previousMillisLcd = 0;
 int displayStateLcd = 0;                                // 0: Wifi Connected, 1: TemperatureS1, 2: TemperatureS2
@@ -214,27 +219,41 @@ void myTimerEvent() {
   // Now tempStr contains the string representation of waterTemp with 2 decimal places
 
   // Convert the string back to float
-  float waterTempFloat = atof(tempStr);
-  Blynk.virtualWrite(V0, waterTempFloat);
-  Blynk.virtualWrite(V1, airTemp);
-  Blynk.virtualWrite(V3, setpointV1);
-  Blynk.virtualWrite(V9, coolingSystem);
-  Blynk.virtualWrite(V11, L5);
-  Blynk.virtualWrite(V12, L6);
-  Blynk.virtualWrite(V17, c4);
-  if (turnOffC2 == false) {
-    Blynk.virtualWrite(V13, 2);
+  if (sendingOldData == false) {
+    float waterTempFloat = atof(tempStr);
+    Blynk.virtualWrite(V0, waterTempFloat);
+    Blynk.virtualWrite(V1, airTemp);
+
+
+    //  Serial.println("Temp: " + String(data.temperature, 2) + "°C");
+    //  Serial.println("Humidity: " + String(data.humidity, 1) + "%");
+    Serial.println("---");
+  } else {
+    Blynk.virtualWrite(V3, setpointV1);
+    Blynk.virtualWrite(V9, coolingSystem);
+    Blynk.virtualWrite(V11, L5);
+    Blynk.virtualWrite(V12, L6);
+    Blynk.virtualWrite(V17, c4);
+    if (turnOffC2 == false) {
+      Blynk.virtualWrite(V13, 2);
+    } else if (manualCleaning == true && autoCleaning == false) {
+      Blynk.virtualWrite(V13, 1);
+    } else if (manualCleaning == false && autoCleaning == true) {
+      Blynk.virtualWrite(V13, 0);
+    }
+    delay(1000);
+    Blynk.virtualWrite(V2, setpointV2);
+    Blynk.virtualWrite(V4, timeV4/1000);
+    Blynk.virtualWrite(V5, tempCalibV5);
+    Blynk.virtualWrite(V6, timeV6/1000);
+    Blynk.virtualWrite(V7, timeV7/1000);
+    Blynk.virtualWrite(V8, timeV8/1000);
+    Blynk.virtualWrite(V14, a9);
+    Blynk.virtualWrite(V15, a11);
+    Blynk.virtualWrite(V16, a13/1000);
+    Blynk.virtualWrite(V19, a14_TempCalibration);
+    sendingOldData = false;
   }
-  else if (manualCleaning == true && autoCleaning == false)
-  {
-    Blynk.virtualWrite(V13, 1);
-  }
-  else if (manualCleaning == false && autoCleaning == true) {
-    Blynk.virtualWrite(V13, 0);
-  }
-  //  Serial.println("Temp: " + String(data.temperature, 2) + "°C");
-  //  Serial.println("Humidity: " + String(data.humidity, 1) + "%");
-  Serial.println("---");
 }
 
 void startPeriodA() {
@@ -310,18 +329,21 @@ BLYNK_WRITE(V2)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   setpointV2 = param.asInt();
+  preferences.putInt("setpointV2", setpointV2);
 }
 
 BLYNK_WRITE(V4)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   timeV4 = param.asInt() * 1000;
+  preferences.putULong("timeV4", timeV4);
 }
 
 BLYNK_WRITE(V5)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asFloat());
   tempCalibV5 = param.asFloat();
+  preferences.putFloat("tempCalibV5", tempCalibV5);
 }
 
 BLYNK_WRITE(V6)  // Executes when the value of virtual pin 0 changes
@@ -329,18 +351,21 @@ BLYNK_WRITE(V6)  // Executes when the value of virtual pin 0 changes
   Serial.println(param.asInt());
   //delay(2000);
   timeV6 = param.asInt() * 1000;
+  preferences.putULong("timeV6", timeV6);
 }
 
 BLYNK_WRITE(V7)  // Executes when the value of virtual pin 0 changesv9
 {
   Serial.println(param.asInt());
   timeV7 = param.asInt() * 1000;
+  preferences.putULong("timeV7", timeV7);
 }
 
 BLYNK_WRITE(V8)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   timeV8 = param.asInt() * 1000;
+  preferences.putULong("timeV8", timeV8);
 }
 
 BLYNK_WRITE(V9)  // Executes when the value of virtual pin 0 changes
@@ -423,7 +448,7 @@ BLYNK_WRITE(V10)  // Executes when the value of virtual pin 0 changes
   Serial.println();
   cleaningSystem = false;
   schedule = false;
-  configTime(t.getTZ_Offset(), 0, "pool.ntp.org"); 
+  configTime(t.getTZ_Offset(), 0, "pool.ntp.org");
   //delay(3000);
 }
 
@@ -487,18 +512,21 @@ BLYNK_WRITE(V14)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   a9 = param.asInt();
+  preferences.putInt("a9", a9);
 }
 
 BLYNK_WRITE(V15)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   a11 = param.asInt();
+  preferences.putInt("a11", a11);
 }
 
 BLYNK_WRITE(V16)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asInt());
   a13 = param.asInt() * 1000;
+  preferences.putULong("a13", a13);
 }
 
 
@@ -520,6 +548,7 @@ BLYNK_WRITE(V19)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asFloat());
   a14_TempCalibration = param.asFloat();
+  preferences.putFloat("a14_TempCalibration", a14_TempCalibration);
 }
 
 
@@ -535,6 +564,9 @@ BLYNK_WRITE(V18) {
   g = param[1].asInt();
   b = param[2].asInt();
   static1(r, g, b, data);
+  preferences.putInt("r", r);
+  preferences.putInt("g", g);
+  preferences.putInt("b", b);
 }
 
 void static1(int r, int g, int b, int brightness) {
@@ -546,30 +578,59 @@ void static1(int r, int g, int b, int brightness) {
 }
 
 void preferencesh() {
-  setpointV1 = preferences.getInt("setpointV1", 0);
-  coolingSystem = preferences.getBool("coolingSystem", coolingSystem);
-  manualCleaning = preferences.getBool("manualCleaning", manualCleaning);
-  manualCleaning = preferences.getBool("autoCleaning", autoCleaning);
-  manualCleaning = preferences.getBool("turnOffC2", turnOffC2);
-  L5 = preferences.getBool("L5", L5);
-  L6 = preferences.getBool("L6", L6);
-  c4 = preferences.getBool("c4", c4);
+  setpointV1 = preferences.getInt("setpointV1", setpointV1);                        //V3
+  coolingSystem = preferences.getBool("coolingSystem", coolingSystem);     //V9
+  manualCleaning = preferences.getBool("manualCleaning", manualCleaning);  //V13
+  autoCleaning = preferences.getBool("autoCleaning", autoCleaning);
+  turnOffC2 = preferences.getBool("turnOffC2", turnOffC2);
+  L5 = preferences.getBool("L5", L5);  //V11
+  L6 = preferences.getBool("L6", L6);  //V12
+  c4 = preferences.getBool("c4", c4);  //V17
+
+  ///Admin
+  setpointV2 = preferences.getInt("setpointV2", setpointV2);                               //V2
+  timeV4 = preferences.getULong("timeV4", timeV4);                                         //V4
+  tempCalibV5 = preferences.getFloat("tempCalibV5", tempCalibV5);                          //V5
+  timeV6 = preferences.getULong("timeV6", timeV6);                                         //V6
+  timeV7 = preferences.getULong("timeV7", timeV7);                                         //V7
+  timeV8 = preferences.getULong("timeV8", timeV8);                                         //V8
+  a9 = preferences.getInt("a9", a9);                                                       //V14
+  a11 = preferences.getInt("a11", a11);                                                    //V15
+  a13 = preferences.getULong("a13", a13);                                                  //V16
+  a14_TempCalibration = preferences.getFloat("a14_TempCalibration", a14_TempCalibration);  //V19
+
+  r = preferences.getInt("r", r);
+  g = preferences.getInt("g", g);
+  b = preferences.getInt("b", b);
+  static1(r, g, b, data);
 }
 
 void loop() {
- 
+  if (!Blynk.connected() || WiFi.status() != WL_CONNECTED) {
+    sendingOldData = true;
+  }
+
+  if (preferencesCondition == true) {
+    Serial.println("Reading Preferences.....");
+    delay(1000);
+    Serial.println("Getting Old Readings");
+    preferencesh();
+    delay(3000);
+    preferencesCondition = false;
+  }
+
   mainSetpointV3 = setpointV1 + setpointV2;  ////mainSetpointV3 this is main setPoint of C1 Temperature
   sensors.requestTemperatures();
   float watertemperatureC = sensors.getTempCByIndex(0);
-  //float temperatureS1 = 15.02 + tempCalibV5;
-  float temperatureS1 = watertemperatureC + tempCalibV5;
+  float temperatureS1 = 15.02 + tempCalibV5;
+  // float temperatureS1 = watertemperatureC + tempCalibV5;
   waterTemp = temperatureS1;
   Serial.print("Temperature S1: ");
   Serial.print(temperatureS1);
   Serial.println("ºC");
-  // float temperatureS2 = 36 + a14_TempCalibration;
+  float temperatureS2 = 36 + a14_TempCalibration;
 
-   float temperatureS2 = dht.readTemperature() + a14_TempCalibration;
+  // float temperatureS2 = dht.readTemperature() + a14_TempCalibration;
   airTemp = temperatureS2;
   ///C3 Calculation
   float a10 = a9 + temperatureS1;
@@ -615,7 +676,7 @@ void loop() {
     //      timeCondition = false;
     //    }
     //    systemState = 0;
-    condition_for_timeV4 = true;
+    
     //    turnOff = true;
     if (systemState != 0 || mainTurnOff == true) {
       Serial.println("Idle State");
@@ -628,6 +689,7 @@ void loop() {
       if (millis() - idleStateEnterTime >= timeV4) {
         Serial.println("2 seconds have passed in Idle State");
         startPeriodC();
+        condition_for_timeV4 = true;
         delayTime = false;
         // Additional actions after 2 seconds in Idle State can be added here
       }
@@ -657,7 +719,7 @@ void loop() {
       }
     }
   }
-  if ((systemState == 1 && condition_for_timeV4 == false) || delayTime == true ) {
+  if ((systemState == 1 && condition_for_timeV4 == false) || (delayTime == true && condition_for_timeV4 == false)) {
     unsigned long elapsedTime = millis() - startTime;
     if (elapsedTime < (timeV6)) {
       // Period A
@@ -765,7 +827,6 @@ void loop() {
     }
     manualCleaningStopTime = millis();  // Reset the deactivation timer
   } else {
-
     Serial.print("DETIEM");
     Serial.print(manualCleaningStopTime);
     manualCleaningStartCondition = false;
@@ -876,7 +937,6 @@ void loop() {
   }
   Serial.println(); 
   preferencesh();
-
 }
 
 
@@ -897,7 +957,7 @@ void deactivateOutput() {
 void cleaning() {
   if (cleaningSystem == true) {
     digitalWrite(l4, HIGH);
-    digitalWrite(2, HIGH);
+    //digitalWrite(2, HIGH);
   }
   if (cleaningSystem == false) {
     digitalWrite(l4, LOW);
