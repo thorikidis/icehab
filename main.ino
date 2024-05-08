@@ -622,15 +622,15 @@ void loop() {
   mainSetpointV3 = setpointV1 + setpointV2;  ////mainSetpointV3 this is main setPoint of C1 Temperature
   sensors.requestTemperatures();
   float watertemperatureC = sensors.getTempCByIndex(0);
-  float temperatureS1 = 15.02 + tempCalibV5;
-  // float temperatureS1 = watertemperatureC + tempCalibV5;
+  // float temperatureS1 = 15.02 + tempCalibV5;
+  float temperatureS1 = watertemperatureC + tempCalibV5;
   waterTemp = temperatureS1;
   Serial.print("Temperature S1: ");
   Serial.print(temperatureS1);
   Serial.println("ºC");
-  float temperatureS2 = 36 + a14_TempCalibration;
+  // float temperatureS2 = 36 + a14_TempCalibration;
 
-  // float temperatureS2 = dht.readTemperature() + a14_TempCalibration;
+  float temperatureS2 = dht.readTemperature() + a14_TempCalibration;
   airTemp = temperatureS2;
   ///C3 Calculation
   float a10 = a9 + temperatureS1;
