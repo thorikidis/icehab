@@ -90,6 +90,7 @@ int stopHour;
 int stopMinute;
 int stopSecond;
 bool selectedDays[7];
+unsigned long tzOffset;  //timeZoneOffset
 
 float waterTemp;
 float airTemp;
@@ -152,7 +153,7 @@ bool turnOffC2 = false;
 int a9 = 3;
 int a11 = 2;
 unsigned long a13 = 5000;
-float a14_TempCalibration = 0;
+float a14_TempCalib = 0.0;
 unsigned long lastActivationTime = 0;
 unsigned long onTime = 0;
 unsigned long offTime = 0;
@@ -243,15 +244,15 @@ void myTimerEvent() {
     }
     delay(1000);
     Blynk.virtualWrite(V2, setpointV2);
-    Blynk.virtualWrite(V4, timeV4/1000);
+    Blynk.virtualWrite(V4, timeV4 / 1000);
     Blynk.virtualWrite(V5, tempCalibV5);
-    Blynk.virtualWrite(V6, timeV6/1000);
-    Blynk.virtualWrite(V7, timeV7/1000);
-    Blynk.virtualWrite(V8, timeV8/1000);
+    Blynk.virtualWrite(V6, timeV6 / 1000);
+    Blynk.virtualWrite(V7, timeV7 / 1000);
+    Blynk.virtualWrite(V8, timeV8 / 1000);
     Blynk.virtualWrite(V14, a9);
     Blynk.virtualWrite(V15, a11);
-    Blynk.virtualWrite(V16, a13/1000);
-    Blynk.virtualWrite(V19, a14_TempCalibration);
+    Blynk.virtualWrite(V16, a13 / 1000);
+    Blynk.virtualWrite(V19, a14_TempCalib);
     sendingOldData = false;
   }
 }
@@ -394,6 +395,9 @@ BLYNK_WRITE(V10)  // Executes when the value of virtual pin 0 changes
     startHour = t.getStartHour();
     startMinute = t.getStartMinute();
     startSecond = t.getStartSecond();
+    preferences.putInt("startHour", startHour);
+    preferences.putInt("startMinute", startMinute);
+    preferences.putInt("startSecond", startSecond);
   } else if (t.isStartSunrise()) {
     Serial.println("Start at sunrise");
   } else if (t.isStartSunset()) {
@@ -409,6 +413,9 @@ BLYNK_WRITE(V10)  // Executes when the value of virtual pin 0 changes
     stopHour = t.getStopHour();
     stopMinute = t.getStopMinute();
     stopSecond = t.getStopSecond();
+    preferences.putInt("stopHour", stopHour);
+    preferences.putInt("stopMinute", stopMinute);
+    preferences.putInt("stopSecond", stopSecond);
   }
 
   else if (t.isStopSunrise()) {
@@ -448,6 +455,8 @@ BLYNK_WRITE(V10)  // Executes when the value of virtual pin 0 changes
   Serial.println();
   cleaningSystem = false;
   schedule = false;
+  tzOffset = t.getTZ_Offset();
+  preferences.putULong("tzOffset", tzOffset);
   configTime(t.getTZ_Offset(), 0, "pool.ntp.org");
   //delay(3000);
 }
@@ -547,8 +556,8 @@ BLYNK_WRITE(V17)  // Executes when the value of virtual pin 0 changes
 BLYNK_WRITE(V19)  // Executes when the value of virtual pin 0 changes
 {
   Serial.println(param.asFloat());
-  a14_TempCalibration = param.asFloat();
-  preferences.putFloat("a14_TempCalibration", a14_TempCalibration);
+  a14_TempCalib = param.asFloat();
+  preferences.putFloat("a14_TempCalib", a14_TempCalib);
 }
 
 
@@ -578,7 +587,7 @@ void static1(int r, int g, int b, int brightness) {
 }
 
 void preferencesh() {
-  setpointV1 = preferences.getInt("setpointV1", setpointV1);                        //V3
+  setpointV1 = preferences.getInt("setpointV1", setpointV1);               //V3
   coolingSystem = preferences.getBool("coolingSystem", coolingSystem);     //V9
   manualCleaning = preferences.getBool("manualCleaning", manualCleaning);  //V13
   autoCleaning = preferences.getBool("autoCleaning", autoCleaning);
@@ -586,18 +595,30 @@ void preferencesh() {
   L5 = preferences.getBool("L5", L5);  //V11
   L6 = preferences.getBool("L6", L6);  //V12
   c4 = preferences.getBool("c4", c4);  //V17
+  //Schedule
+  startHour = preferences.getInt("startHour", startHour);
+  startMinute = preferences.getInt("startMinute", startMinute);
+  startSecond = preferences.getInt("startSecond", startSecond);
+  stopHour = preferences.getInt("stopHour", stopHour);
+  stopMinute = preferences.getInt("stopMinute", stopMinute);
+  stopSecond = preferences.getInt("stopSecond", stopSecond);
+  tzOffset = preferences.getULong("tzOffset", tzOffset);
+  configTime(tzOffset, 0, "pool.ntp.org");
+  Serial.println("tzOffset  ");
+  Serial.print(tzOffset);
 
   ///Admin
-  setpointV2 = preferences.getInt("setpointV2", setpointV2);                               //V2
-  timeV4 = preferences.getULong("timeV4", timeV4);                                         //V4
-  tempCalibV5 = preferences.getFloat("tempCalibV5", tempCalibV5);                          //V5
-  timeV6 = preferences.getULong("timeV6", timeV6);                                         //V6
-  timeV7 = preferences.getULong("timeV7", timeV7);                                         //V7
-  timeV8 = preferences.getULong("timeV8", timeV8);                                         //V8
-  a9 = preferences.getInt("a9", a9);                                                       //V14
-  a11 = preferences.getInt("a11", a11);                                                    //V15
-  a13 = preferences.getULong("a13", a13);                                                  //V16
-  a14_TempCalibration = preferences.getFloat("a14_TempCalibration", a14_TempCalibration);  //V19
+  setpointV2 = preferences.getInt("setpointV2", setpointV2);             //V2
+  timeV4 = preferences.getULong("timeV4", timeV4);                       //V4
+  tempCalibV5 = preferences.getFloat("tempCalibV5", tempCalibV5);        //V5
+  timeV6 = preferences.getULong("timeV6", timeV6);                       //V6
+  timeV7 = preferences.getULong("timeV7", timeV7);                       //V7
+  timeV8 = preferences.getULong("timeV8", timeV8);                       //V8
+  a9 = preferences.getInt("a9", a9);                                     //V14
+  a11 = preferences.getInt("a11", a11);                                  //V15
+  a13 = preferences.getULong("a13", a13);                                //V16
+  a14_TempCalib = preferences.getFloat("a14_TempCalib", a14_TempCalib);  //V19
+  
 
   r = preferences.getInt("r", r);
   g = preferences.getInt("g", g);
@@ -622,15 +643,15 @@ void loop() {
   mainSetpointV3 = setpointV1 + setpointV2;  ////mainSetpointV3 this is main setPoint of C1 Temperature
   sensors.requestTemperatures();
   float watertemperatureC = sensors.getTempCByIndex(0);
-  // float temperatureS1 = 15.02 + tempCalibV5;
+ // float temperatureS1 = 15.02 + tempCalibV5;
   float temperatureS1 = watertemperatureC + tempCalibV5;
   waterTemp = temperatureS1;
   Serial.print("Temperature S1: ");
   Serial.print(temperatureS1);
   Serial.println("ºC");
-  // float temperatureS2 = 36 + a14_TempCalibration;
+  //float temperatureS2 = 36 + a14_TempCalib;
 
-  float temperatureS2 = dht.readTemperature() + a14_TempCalibration;
+  float temperatureS2 = dht.readTemperature() + a14_TempCalib;
   airTemp = temperatureS2;
   ///C3 Calculation
   float a10 = a9 + temperatureS1;
@@ -676,7 +697,7 @@ void loop() {
     //      timeCondition = false;
     //    }
     //    systemState = 0;
-    
+
     //    turnOff = true;
     if (systemState != 0 || mainTurnOff == true) {
       Serial.println("Idle State");
@@ -800,6 +821,7 @@ void loop() {
   }
   if ((manualCleaning == true || c3andc4condition == true) && turnOffC2 == true) {
     Serial.println("Manual Cleaning ");
+    digitalWrite(l4, HIGH);
     if (L5 == true) {
       digitalWrite(l5, HIGH);
     } else {
@@ -935,7 +957,7 @@ void loop() {
       }
     }
   }
-  Serial.println(); 
+  Serial.println();
   preferencesh();
 }
 
