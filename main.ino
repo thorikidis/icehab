@@ -451,6 +451,7 @@ BLYNK_WRITE(V10)  // Executes when the value of virtual pin 0 changes
     Serial.println(selectedDays[i]);
   }
   selectedDays[0] = t.isWeekdaySelected(7);
+  preferences.putBytes("selectedDays", (uint8_t*)selectedDays, sizeof(selectedDays));
 
   Serial.println();
   cleaningSystem = false;
@@ -618,12 +619,14 @@ void preferencesh() {
   a11 = preferences.getInt("a11", a11);                                  //V15
   a13 = preferences.getULong("a13", a13);                                //V16
   a14_TempCalib = preferences.getFloat("a14_TempCalib", a14_TempCalib);  //V19
-  
+
 
   r = preferences.getInt("r", r);
   g = preferences.getInt("g", g);
   b = preferences.getInt("b", b);
   static1(r, g, b, data);
+
+  preferences.getBytes("selectedDays", (uint8_t *)selectedDays, sizeof(selectedDays));
 }
 
 void loop() {
@@ -643,13 +646,13 @@ void loop() {
   mainSetpointV3 = setpointV1 + setpointV2;  ////mainSetpointV3 this is main setPoint of C1 Temperature
   sensors.requestTemperatures();
   float watertemperatureC = sensors.getTempCByIndex(0);
- // float temperatureS1 = 15.02 + tempCalibV5;
+  // float temperatureS1 = 15.02 + tempCalibV5;
   float temperatureS1 = watertemperatureC + tempCalibV5;
   waterTemp = temperatureS1;
   Serial.print("Temperature S1: ");
   Serial.print(temperatureS1);
   Serial.println("ºC");
-  //float temperatureS2 = 36 + a14_TempCalib;
+  // float temperatureS2 = 36 + a14_TempCalib;
 
   float temperatureS2 = dht.readTemperature() + a14_TempCalib;
   airTemp = temperatureS2;
