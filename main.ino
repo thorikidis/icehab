@@ -111,7 +111,7 @@ int l7 = 16;
 int l8 = 15;
 int l9 = 33;
 int waterSwitch = 32;
-const int oneWireBus = 5;
+const int oneWireBus = 5; //the S1 sensor defined on pin5
 
 //////////C1
 int setpointV1 = 25;  // Adjust this setpoint value as needed
