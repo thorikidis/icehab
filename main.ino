@@ -911,7 +911,7 @@ void loop() {
     // If the output was activated, turn it off after the delay
     if (millis() - outputDeactivationTime >= 10000) {
       outputActivated = false;
-      deactivateOutput();
+      activateOutput();
 
       //}
     }
@@ -919,7 +919,7 @@ void loop() {
 
   // Check if the delay has passed and activate the output
   if (outputActivated == true && (millis() - sensorHighTime >= 10000)) {
-    activateOutput();
+    deactivateOutput();
     outputActivated = false;  // Reset the flag
   }
 
