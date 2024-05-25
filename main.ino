@@ -120,10 +120,10 @@ int mainSetpointV3 = 0;
 int systemState = 0;  // 0: Idle, 1: Demand
 
 // Time variables (in milliseconds)
-unsigned long timeV4 = 8000;  // Time to wait in Idle state
-unsigned long timeV6 = 432000;  // Duration of Period A
-unsigned long timeV7 = 7200;  // Duration of Period B
-unsigned long timeV8 = 108000;  // Duration of Period C
+unsigned long timeV4 = 7200;  // Time to wait in Idle state, George recommendation is 120 sec x 60 = 7200 milliseconds
+unsigned long timeV6 = 432000;  // Duration of Period A, George recommendation is 120 minutes x 60 x 60 = 432000 milliseconds
+unsigned long timeV7 = 7200;  // Duration of Period B, George recommendation is 2 minutes x 60 x 60 = 7200 milliseconds
+unsigned long timeV8 = 108000;  // Duration of Period C, George recommendation is 30minutes x 60 x 60 = 108000 milliseconds
 float tempCalibV5 = 0.0;
 
 unsigned long startTime;  // Variable to store the start time
