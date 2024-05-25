@@ -673,9 +673,9 @@ void loop() {
   Serial.println(timeV4 / 1000);
   //  Serial.print("timeV5:  ");
   //  Serial.println(timeV5);
-  Serial.print("timeV6:  ");
+  Serial.print("timeV6: ");
   Serial.println(timeV6 / 1000);
-  Serial.print("timeV7:  ");
+  Serial.print("timeV7: ");
   Serial.println(timeV7 / 1000);
   Serial.print("timeV8: ");
   Serial.println(timeV8 / 1000);
