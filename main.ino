@@ -121,9 +121,9 @@ int systemState = 0;  // 0: Idle, 1: Demand
 
 // Time variables (in milliseconds)
 unsigned long timeV4 = 8000;  // Time to wait in Idle state
-unsigned long timeV6 = 5000;  // Duration of Period A
-unsigned long timeV7 = 5000;  // Duration of Period B
-unsigned long timeV8 = 5000;  // Duration of Period C
+unsigned long timeV6 = 432000;  // Duration of Period A
+unsigned long timeV7 = 7200;  // Duration of Period B
+unsigned long timeV8 = 108000;  // Duration of Period C
 float tempCalibV5 = 0.0;
 
 unsigned long startTime;  // Variable to store the start time
