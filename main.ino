@@ -25,7 +25,7 @@
 #define BLYNK_TEMPLATE_ID "TMPL4vLs-XKTJ"
 #define BLYNK_TEMPLATE_NAME "IceHab"
 
-#define BLYNK_FIRMWARE_VERSION "0.1.0"
+#define BLYNK_FIRMWARE_VERSION "0.1.1"
 
 #define BLYNK_PRINT Serial
 //#define BLYNK_DEBUG
