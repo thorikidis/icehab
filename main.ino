@@ -158,11 +158,11 @@ unsigned long lastActivationTime = 0;
 unsigned long onTime = 0;
 unsigned long offTime = 0;
 bool schedule = false;
-// Setup a oneWire instance to communicate with any OneWire devices
+// Setup a oneWire instance to communicate with any OneWire devices, DS18B20
 OneWire oneWire(oneWireBus);
 
 // Pass our oneWire reference to Dallas Temperature sensor
-DallasTemperature sensors(&oneWire);
+DallasTemperature sensors(&oneWire); //DS18B20 sensor s1
 
 /* Comment this out to disable prints and save space */
 #define BLYNK_PRINT Serial
@@ -312,8 +312,7 @@ void setup() {
   BlynkEdgent.begin();
   //  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
   timer.setInterval(1000L, myTimerEvent);
-  //  configTime(5 * 3600, 0, "pool.ntp.org"); //For Pakistan
-  configTime(3 * 3600, 0, "pool.ntp.org");  //For Greece
+  configTime(3 * 3600, 0, "pool.ntp.org");  //For Greece default setting for the first time, after connecting to Blynk then when you schedule calendar it will set the Blynk time
   //  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   delay(500);
 }
