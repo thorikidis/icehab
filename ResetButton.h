@@ -1,12 +1,13 @@
-
 #ifdef BOARD_BUTTON_PIN
 
 volatile bool     g_buttonPressed = false;
 volatile uint32_t g_buttonPressTime = -1;
-
+extern bool sendingOldData;
 void button_action(void)
 {
   BlynkState::set(MODE_RESET_CONFIG);
+  digitalWrite(2,HIGH);
+  sendingOldData = true;
 }
 
 void button_change(void)
@@ -42,7 +43,6 @@ void button_init()
 #endif
   attachInterrupt(BOARD_BUTTON_PIN, button_change, CHANGE);
 }
-
 
 #else
 
