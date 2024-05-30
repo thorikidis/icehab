@@ -84,6 +84,7 @@ void runBlynkWithChecks() {
     if (!Blynk.connected()) {
       if (WiFi.status() == WL_CONNECTED) {
         BlynkState::set(MODE_CONNECTING_CLOUD);
+        digitalWrite(2,LOW);
       } else {
         BlynkState::set(MODE_CONNECTING_NET);
       }
@@ -117,8 +118,10 @@ public:
     } else if (config_load_blnkopt()) {
       DEBUG_PRINT("Firmware is preprovisioned");
       BlynkState::set(MODE_CONNECTING_NET);
+      digitalWrite(2,LOW);
     } else {
       BlynkState::set(MODE_WAIT_CONFIG);
+      //digitalWrite(2,HIGH);
     }
 
     if (!String(BLYNK_TEMPLATE_ID).startsWith("TMPL") ||
@@ -150,3 +153,4 @@ void app_loop() {
     edgentTimer.run();
     edgentConsole.run();
 }
+
